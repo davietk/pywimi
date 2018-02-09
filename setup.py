@@ -8,4 +8,4 @@ setup(name='pywimi',
       author_email='davietk@gmail.com',
       license='MIT',
       packages=['pywimi'],
-      zip_safe=False)
+      keywords = ['wimi', 'api'])
