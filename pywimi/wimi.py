@@ -19,10 +19,6 @@ import sys
 
 class Wimi(object):
     
-    """
-    Constructeur
-    """
-
     def __init__(self):
         """
         Declaration d'une nouvelle instance Wimi
@@ -32,7 +28,7 @@ class Wimi(object):
         :param password: mot de passe de connexion
         :return ne retourne rien
         """
-        # logging.getLogger().setLevel(logging.INFO)  # A commenter en PRD
+        logging.getLogger().setLevel(logging.INFO)  # A commenter en PRD
         logging.info("> START Constructeur")
         self.account_name = ""
         self.login = ""
@@ -126,6 +122,18 @@ class Wimi(object):
         logging.info("< END getTaskListId")
         return task_list_id
 
+    def listTaskList(self):
+        """
+        Recupère la liste des task list
+
+        :return lists : tableau contenant l'ensemble des listes de taches
+        """
+        identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(
+            self.account_id) + '", "project_id":"' + str(self.project_id) + '"}'
+        data = '{}'
+        response = json.loads(self.callApi("task.tlist.getall", identification, data))
+        return response['body']['data']['lists']
+
     def getTaskId(self, task_name, task_list_id):
         """
         Recupère l'id d'une tache
@@ -160,7 +168,7 @@ class Wimi(object):
         Recupère une liste de tache par liste
 
         :param: task_list_id : l'id de la liste dans laquelle chercher
-        :return list_task : tableau contenant l'ensemble des id des taches
+        :return tasks : tableau contenant l'ensemble des id des taches
         """
         logging.info("> START listTask")
         list_task = [];
@@ -168,11 +176,7 @@ class Wimi(object):
             self.account_id) + '", "project_id":"' + str(self.project_id) + '", "task_list_id":"'+str(task_list_id)+'"}'
         data = '{}'
         response = json.loads(self.callApi("task.task.getall", identification, data))
-        tasks = response['body']['data']['tasks']
-        for task in tasks:
-            list_task.append(task['task_id'])
-        logging.info("< END listTask")
-        return list_task
+        return response['body']['data']['tasks']
 
     def getTaskDetail(self, task_id):
         """
@@ -290,35 +294,82 @@ class Wimi(object):
 
         return response.status_code
 
-    def getFileData(self, file_name):
+    def getFileData(self, file_name, dir_id=None):
         """
         Recupère la liste des fichiers dans l'espace de travail par defaut
 
-        :param: n/a
+        :param: file_name = le nom du fichier a rechercher
+        :param: dir_id = l'id du répertoire dans lequel chercher. Par defaut a None
         :return la liste des fichiers avec leurs attributs
         """
         logging.info("> START getFileData")
 
-        file_data = ""
-        identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(
-            self.account_id) + '", "project_id":"' + str(self.project_id) + '"}'
         data = '{}'
+        file_data = ""
+        identification = ''
+
+        if dir_id == None:
+            identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(
+            self.account_id) + '", "project_id":"' + str(self.project_id) + '"}'
+        else:
+            identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(
+            self.account_id) + '", "project_id":"' + str(self.project_id) + '", "dir_id":'+str(dir_id)+'}'
+        
         response = json.loads(self.callApi("document.entry.List", identification, data))
+
         try:
             files = response['body']['data']['files']
             for file in files:
-                if file['name'] == file_name:
+                if file_name in file['name'] :
                     file_data = file
                     break
                 else:
                     file_data = "false"
         except ValueError:
-            logging.warn("Tache non trouve. task_id set to false")
+            logging.warn("Fichier non trouve. file_data set to false")
             file_data = "false"
 
         logging.info("< END getFileData")
 
         return file_data
+
+    def getDirectoryData(self, directory_name, dir_id=None):
+        """
+        Recupère la liste des fichiers dans l'espace de travail par defaut
+
+        :param: directory_name = le nom du repertoire a rechercher
+        :param: dir_id = l'id du répertoire dans lequel chercher. Par defaut a None
+        :return la liste des repertoires avec leurs attributs
+        """
+        logging.info("> START getDirectoryData")
+
+        directory_data = ""
+        print str(dir_id)
+        identification = ''
+        if dir_id == None:
+            identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(
+            self.account_id) + '", "project_id":"' + str(self.project_id) + '"}'
+        else:
+            identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(
+            self.account_id) + '", "project_id":"' + str(self.project_id) + '", "dir_id":'+str(dir_id)+'}'
+        
+        data = '{}'
+        response = json.loads(self.callApi("document.entry.List", identification, data))
+        try:
+            directories = response['body']['data']['dirs']
+            for directory in directories:
+                if directory['name'] == directory_name:
+                    directory_data = directory
+                    break
+                else:
+                    directory_data = "false"
+        except ValueError:
+            logging.warn("Repertoire non trouve. directory_data set to false")
+            directory_data = "false"
+
+        logging.info("< END getDirectoryData")
+
+        return directory_data
 
     def deleteFile(self, file_id):
         """
@@ -337,4 +388,18 @@ class Wimi(object):
         logging.info(response)
         logging.info("< END deleteFile")
 
+    def getUserDetail(self, user_id):
+        """
+        Recupère les details d'un utilisateur
 
+        :param: user_id : l'id du user à rechercher
+        :return user_detail : les details de la tache
+        """
+        logging.info("> START getUserDetail")
+        identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(
+            self.account_id) + '", "target_user_id":"'+str(user_id)+'"}'
+        data = '{}'
+        response = json.loads(self.callApi("main.account.GetUser", identification, data))
+        user_detail = response['body']['data']['user']
+        logging.info("< END getUserDetail")
+        return user_detail

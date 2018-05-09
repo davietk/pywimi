@@ -1,2 +1,4 @@
 pywimi/Wimi.py.bak
 pywimi/wimi.py.old
+dist/
+pywimi.egg-info/
