@@ -344,7 +344,7 @@ class Wimi(object):
         logging.info("> START getDirectoryData")
 
         directory_data = ""
-        print str(dir_id)
+        # print str(dir_id)
         identification = ''
         if dir_id == None:
             identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(
@@ -403,3 +403,35 @@ class Wimi(object):
         user_detail = response['body']['data']['user']
         logging.info("< END getUserDetail")
         return user_detail
+
+    def listChat(self):
+        """
+        Recupère la liste des chat disponible
+
+        :param: user_id : l'id du user à rechercher
+        :return user_detail : les details de la tache
+        """
+        logging.info("> START listChat")
+        identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(self.account_id) + '"}'
+        data = '{}'
+        response = json.loads(self.callApi("chat.chat.GetList", identification, data))
+        print (str(response))
+        list_chat = response['body']
+        logging.info("< END listChat")
+        return list_chat
+
+    def postChatMessage(self, chat_id, message):
+        """
+        Post un message sur le chat passé en paramètre
+
+        :param: chat_id : l'id du chat
+        :return message : message à publier
+        """
+        logging.info("> START listChat")
+        identification = '{"user_id":"' + str(self.user_id) + '", "account_id":"' + str(self.account_id) + '", "chat_id": "'+ str(chat_id) +'"}'
+        data = '{"message": "'+str(message)+'", "integration_attachment": null}'
+        response = json.loads(self.callApi("chat.chat.postMessage", identification, data))
+        print (str(response))
+        list_chat = response['body']
+        logging.info("< END listChat")
+        return list_chat
